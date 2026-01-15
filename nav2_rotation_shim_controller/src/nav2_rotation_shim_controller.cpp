@@ -212,20 +212,41 @@ geometry_msgs::msg::TwistStamped RotationShimController::computeVelocityCommands
       auto sampled_pt = getSampledPathPt();
       double angular_distance_to_heading;
       if (use_path_orientations_) {
+        double current_yaw = tf2::getYaw(pose.pose.orientation);
+        double sampled_yaw = tf2::getYaw(sampled_pt.pose.orientation);
+
         angular_distance_to_heading = angles::shortest_angular_distance(
-          tf2::getYaw(pose.pose.orientation),
-          tf2::getYaw(sampled_pt.pose.orientation));
+          current_yaw, sampled_yaw);
+
+        RCLCPP_INFO(
+          logger_,
+          "Rotation Check: Using path orientations. "
+          "Robot(yaw=%.2f rad) "
+          "Sampled Pt(yaw=%.2f rad). "
+          "Angular Distance: %.2f rad",
+          current_yaw,
+          sampled_yaw,
+          angular_distance_to_heading);
+
       } else {
         geometry_msgs::msg::Pose sampled_pt_base = transformPoseToBaseFrame(sampled_pt);
         angular_distance_to_heading = std::atan2(
           sampled_pt_base.position.y,
           sampled_pt_base.position.x);
+
+        RCLCPP_INFO(
+          logger_,
+          "Rotation Check: Using path position. "
+          "Angular Distance: %.2f rad",
+          angular_distance_to_heading);
+
       }
+      
 
       double angular_thresh =
         in_rotation_ ? angular_disengage_threshold_ : angular_dist_threshold_;
       if (abs(angular_distance_to_heading) > angular_thresh) {
-        RCLCPP_DEBUG(
+        RCLCPP_INFO(
           logger_,
           "Robot is not within the new path's rough heading, rotating to heading...");
         in_rotation_ = true;
@@ -233,13 +254,20 @@ geometry_msgs::msg::TwistStamped RotationShimController::computeVelocityCommands
         last_angular_vel_ = cmd_vel.twist.angular.z;
         return cmd_vel;
       } else {
-        RCLCPP_DEBUG(
+        RCLCPP_INFO(logger_, "Within angular threshold, zeroing velocity...");
+
+        geometry_msgs::msg::TwistStamped zero_cmd;
+        zero_cmd.header.stamp = clock_->now();
+        zero_cmd.twist.linear.x = 0.0;
+        zero_cmd.twist.angular.z = 0.0;
+
+        RCLCPP_INFO(
           logger_,
           "Robot is at the new path's rough heading, passing to controller");
         path_updated_ = false;
       }
     } catch (const std::runtime_error & e) {
-      RCLCPP_DEBUG(
+      RCLCPP_INFO(
         logger_,
         "Rotation Shim Controller was unable to find a sampling point,"
         " a rotational collision was detected, or TF failed to transform"
@@ -250,6 +278,7 @@ geometry_msgs::msg::TwistStamped RotationShimController::computeVelocityCommands
 
   // If at this point, use the primary controller to path track
   in_rotation_ = false;
+  last_angular_vel_ = 0.0;
   auto cmd_vel = primary_controller_->computeVelocityCommands(pose, velocity, goal_checker);
   last_angular_vel_ = cmd_vel.twist.angular.z;
   return cmd_vel;

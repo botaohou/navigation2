@@ -1,0 +1,12 @@
+# Goal
+nav_msgs/Path path
+string behavior_tree
+
+---
+# Result
+uint8 error_code
+string error_msg
+
+---
+# Feedback
+float32 progress

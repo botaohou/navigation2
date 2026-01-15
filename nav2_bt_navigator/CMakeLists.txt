@@ -71,10 +71,22 @@ ament_target_dependencies(nav2_navigate_to_pose_navigator ${dependencies})
 add_library(nav2_navigate_through_poses SHARED src/navigators/navigate_through_poses.cpp)
 ament_target_dependencies(nav2_navigate_through_poses ${dependencies})
 
+# ----------------------------------------
+# NavigateWithPath Navigator
+# ----------------------------------------
+add_library(nav2_navigate_with_path SHARED
+  src/navigators/navigate_with_path.cpp
+)
+
+ament_target_dependencies(nav2_navigate_with_path
+  ${dependencies}
+)
+
+
 pluginlib_export_plugin_description_file(nav2_core navigator_plugins.xml)
 rclcpp_components_register_nodes(${library_name} "nav2_bt_navigator::BtNavigator")
 
-install(TARGETS ${library_name} nav2_navigate_to_pose_navigator nav2_navigate_through_poses
+install(TARGETS ${library_name} nav2_navigate_to_pose_navigator nav2_navigate_through_poses nav2_navigate_with_path
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -96,6 +108,6 @@ if(BUILD_TESTING)
 endif()
 
 ament_export_include_directories(include)
-ament_export_libraries(${library_name} nav2_navigate_to_pose_navigator nav2_navigate_through_poses)
+ament_export_libraries(${library_name} nav2_navigate_to_pose_navigator nav2_navigate_through_poses nav2_navigate_with_path)
 ament_export_dependencies(${dependencies})
 ament_package()

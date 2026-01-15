@@ -6,11 +6,18 @@
 	    <description>Navigate to Pose Navigator</description>
 	  </class>
 	</library>
-  <library path="nav2_navigate_through_poses">
+    <library path="nav2_navigate_through_poses">
 	  <class
 	  	type="nav2_bt_navigator::NavigateThroughPosesNavigator"
 	  	base_class_type="nav2_core::NavigatorBase">
 	    <description>Navigate through Poses Navigator</description>
 	  </class>
+	</library>
+	<library path="nav2_navigate_with_path">
+		<class
+		type="nav2_bt_navigator::NavigateWithPathNavigator"
+		base_class_type="nav2_core::NavigatorBase">
+		<description>Navigate with pre-defined Path Navigator</description>
+		</class>
 	</library>
 </class_libraries>

@@ -198,6 +198,15 @@ protected:
   std::mutex mutex_;
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr dyn_params_handler_;
   std::unique_ptr<nav2_controller::PositionGoalChecker> position_goal_checker_;
+
+  // --- New Members for zero-command transition regarding bodenroller's wheel ---
+  /** @brief Duration(in s) to output a zero command after rotation finishes. */
+  double zero_cmd_duration;
+  /** @brief Flag to indicate the controller is in the zero-command transition state. */
+  bool waiting_for_zero_command_;
+  /** @brief Timestamp when the zero-command transition started. */
+  rclcpp::Time zero_cmd_start_time_;
+
 };
 
 }  // namespace nav2_rotation_shim_controller

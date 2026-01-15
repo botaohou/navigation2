@@ -67,9 +67,12 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/FollowGPSWaypoints.action"
   "action/DockRobot.action"
   "action/UndockRobot.action"
+  "action/NavigateWithPath.action"
   DEPENDENCIES builtin_interfaces geometry_msgs std_msgs action_msgs nav_msgs geographic_msgs
 )
 
 ament_export_dependencies(rosidl_default_runtime)
 
 ament_package()
+
+

@@ -308,6 +308,11 @@ NavfnPlanner::makePlan(
   if (found_legal) {
     // extract the plan
     if (getPlanFromPotential(best_pose, plan)) {
+
+      for (auto & path_pose : plan.poses) {
+        path_pose.pose.orientation = start.orientation;
+      }
+      
       smoothApproachToGoal(best_pose, plan);
 
       // If use_final_approach_orientation=true, interpolate the last pose orientation from the
@@ -425,10 +430,14 @@ NavfnPlanner::getPlanFromPotential(
     pose.pose.position.x = world_x;
     pose.pose.position.y = world_y;
     pose.pose.position.z = 0.0;
-    pose.pose.orientation.x = 0.0;
-    pose.pose.orientation.y = 0.0;
-    pose.pose.orientation.z = 0.0;
-    pose.pose.orientation.w = 1.0;
+
+    pose.pose.orientation = goal.orientation;
+
+
+    // pose.pose.orientation.x = 0.0;
+    // pose.pose.orientation.y = 0.0;
+    // pose.pose.orientation.z = 0.0;
+    // pose.pose.orientation.w = 1.0;
     plan.poses.push_back(pose);
   }
 
