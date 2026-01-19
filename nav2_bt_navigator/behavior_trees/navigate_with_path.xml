@@ -6,49 +6,44 @@
 -->
 <root BTCPP_format="4" main_tree_to_execute="MainTree">
   <BehaviorTree ID="MainTree">
-    <RecoveryNode number_of_retries="6" name="NavigateWithpath">
+    <RecoveryNode number_of_retries="60" name="NavigateWithpath">
       <PipelineSequence name="NavigateWithReplanning">
         <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
         <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
         <RateController hz="5.0">
           <Sequence>
             <TruncatePathLocal  input_path="{path}"
-                                output_path="{path_local_long}"
+                                output_path="{temp_path_candidate}"
                                 distance_forward="4.0"
                                 distance_backward="0.0"
                                 robot_frame="base_link"/>
 
-            <TruncatePathLocal  input_path="{path_local_long}"
+            <TruncatePathLocal  input_path="{temp_path_candidate}"
                                 output_path="{path_local_short}"
                                 distance_forward="2.0"
-                                distance_backward="3.0"
+                                distance_backward="2.0"
                                 robot_frame="base_link"/>
-
-            <!-- <SmoothPath unsmoothed_path="{path}"
-                        smoothed_path="{path_local_long}" 
-                        max_smoothing_duration="3.0" 
-                        smoother_id="SmoothPath" 
-                        check_for_collisions="false" 
-                        smoothing_duration="{smoothing_duration_used}" 
-                        was_completed="{smoothing_completed}" 
-                        error_code_id="{smoothing_path_error_code}" 
-                        error_msg="{smoothing_path_error_msg}"/>               -->
       
             <Fallback>
-              <IsPathValid path="{path_local_short}"/>
               <Sequence>
-                <GetPoseFromPath path="{path_local_long}" index="-1" pose="{goal_new}"/>
+                  <IsPathValid path="{path_local_short}"/>
+                  <Script code="path_local_long := temp_path_candidate" />
+              </Sequence>
+              <Sequence>
+                <GetPoseFromPath path="{temp_path_candidate}" index="-1" pose="{goal_new}"/>
                 <!-- <ComputePathToPose goal="{goal_new}" path="{path_local_long}" planner_id="{selected_planner}"/> -->
                 <RecoveryNode number_of_retries="1" name="ComputePathToPoseWithRecovery">
                   <ComputePathToPose goal="{goal_new}" path="{path_local_long}" planner_id="{selected_planner}" error_code_id="{compute_path_error_code}"/>
-                  <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                  <Sequence>
+                    <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
+                    <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                  </Sequence>
                 </RecoveryNode>
               </Sequence>
             </Fallback>
+
           </Sequence>
         </RateController>
-
-
         <RecoveryNode number_of_retries="1" name="FollowPath">
           <FollowPath path="{path_local_long}"
                       controller_id="{selected_controller}"
@@ -61,7 +56,16 @@
           </Sequence>
         </RecoveryNode>
       </PipelineSequence>
+
       <Sequence>
+        <ReactiveFallback name="WaitingRecovery">
+          <GoalUpdated/> <Sequence>
+            <!-- <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/> -->
+            <Wait wait_duration="10.0"/>
+            </Sequence>
+        </ReactiveFallback>
+      </Sequence>
+      <!-- <Sequence>
         <Fallback>
           <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
           <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
@@ -78,7 +82,7 @@
             <BackUp backup_dist="0.30" backup_speed="0.15" error_code_id="{backup_code_id}"/>
           </RoundRobin>
         </ReactiveFallback>
-      </Sequence>
+      </Sequence> -->
     </RecoveryNode>
   </BehaviorTree>
 </root>
